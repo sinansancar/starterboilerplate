@@ -3,6 +3,7 @@ const webpack = require('webpack');
 
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ImageMinimizerPlugin = require('image-minimizer-webpack-plugin');
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'dev';
 
@@ -42,6 +43,21 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: '[name].css',
             chunkFilename: '[id].css'
+        }),
+
+        new ImageMinimizerPlugin({
+            minimizer: {
+                implementation: ImageMinimizerPlugin.imageminMinify,
+                options: {
+                    // Lossless optimization with custom option
+                    // Feel free to experiment with options for better result for you
+                    plugins: [
+                        ["gifsicle", { interlaced: true }],
+                        ["jpegtran", { progressive: true }],
+                        ["optipng", { optimizationLevel: 5 }],
+                    ]
+                }
+            },
         })
     ],
 
@@ -81,6 +97,31 @@ module.exports = {
                         return '[hash].[ext]'
                     }
                 }
+            },
+            {
+                test: /\.(jpe?g|png|gif|svg)$/i,
+                use: [
+                    {
+                        loader: ImageMinimizerPlugin.loader,
+                        options: {
+                            minimizer: {
+                                implementation: ImageMinimizerPlugin.imageminMinify,
+
+                            },
+                        },
+
+                    },
+                ],
+            },
+            {
+                test: /\.(glsl|frag|vert)$/,
+                loader: 'raw-loader',
+                exclude: /node_modules/
+            },
+            {
+                test: /\.(glsl|frag|vert)$/,
+                loader: 'glslify-loader',
+                exclude: /node_modules/
             }
         ]
     }
